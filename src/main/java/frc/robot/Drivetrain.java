@@ -35,7 +35,8 @@ class Drivetrain {
   public static final double wheelbaseX = (24.0-2*2.625)*0.0254; // The length of the robot from front to back in units of meters. Measured from the centers of each swerve wheel.
   public static final double wheelbaseY = (24.0-2*2.625)*0.0254; // The length of the robot from left to right in units of meters. Measured from the centers of each swerve wheel.
   public static final double wheelbaseR = Math.sqrt(Math.pow(wheelbaseX/2.0, 2) + Math.pow(wheelbaseY/2.0, 2)); // The "radius" of the robot from robot center to the center of the swerve wheel in units of meters.
-  public static final double fieldWidth = 8.0137; // The width of the field in meters. Used to translate between Blue and Red coordinate systems.
+  public static final double fieldWidth = 8.0137; // The X width of the field in meters. Used to translate between Blue and Red coordinate systems.
+  public static final double fieldLength = 651.22*0.0254; // The Y length of the field in meters.
   public static final double maxVelTeleop = SwerveModule.maxVel; // User defined maximum speed of the robot. Enforced during teleop. Unit: meters per second Robot maximum is 4 m/s.
   public static final double maxAngVelTeleop = SwerveModule.maxVel/wheelbaseR; // User defined maximum rotational speed of the robot. Enforced during teleop. Unit: raidans per second Robot maximum is 4pi rad/s.
   public static final double maxAccTeleop = maxAcc; // User defined maximum acceleration of the robot. Enforced during teleop. Unit: meters per second^2 Robot maximum is 5 m/s2.

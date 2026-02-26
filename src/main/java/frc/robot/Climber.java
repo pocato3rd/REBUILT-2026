@@ -49,9 +49,9 @@ public class Climber {
 				if (Math.abs(getVelocity()) > 0.5) homingTimer.restart();
 				if (homingTimer.get() > 1.0) {
 					climbMotor.setPosition(0.0, 0.03);
-          			isHomed = true;
+          isHomed = true;
 					currMode = Mode.DOWN;
-          			desiredPosition = downPosition;
+          desiredPosition = downPosition;
 				}
 			break;
 
@@ -68,14 +68,14 @@ public class Climber {
 	public void moveUp() {
 		if (isHomed) {
 			currMode = Mode.UP;
-      		desiredPosition = upPosition;
+      desiredPosition = upPosition;
 		}
 	}
 
 	public void moveDown() {
 		if (isHomed) {
 			currMode = Mode.DOWN;
-      		desiredPosition = downPosition;
+      desiredPosition = downPosition;
 		}
 	}
 

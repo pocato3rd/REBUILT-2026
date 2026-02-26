@@ -31,8 +31,8 @@ public class Shooter {
   private final MotionMagicTorqueCurrentFOC hoodMotorPositionRequest = new MotionMagicTorqueCurrentFOC(0.0); 
   private final double rpmTol = 200.0;
   private final double hoodTol = 0.01;
-  private final double hoodMinPosition = 0.020;
-  private final double hoodMaxPosition = 0.115;
+  public final double hoodMinPosition = 0.020;
+  public final double hoodMaxPosition = 0.115;
   private double shootingRPM = 5800.0;
   private double desiredHoodPosition = hoodMinPosition;
 

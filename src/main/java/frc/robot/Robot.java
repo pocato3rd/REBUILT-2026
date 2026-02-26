@@ -37,6 +37,11 @@ public class Robot extends TimedRobot {
   private int autoStage = 1;
   private boolean autoCompleted = false;
 
+  private final double nearTrenchX = 182.11*0.0254;
+  private final double farTrenchX = Drivetrain.fieldLength - nearTrenchX;
+  private final double trenchTolerance = 0.5;
+  private boolean isScoring = false;
+
   public void robotInit() { 
     // Configures the auto chooser on the dashboard.
     autoChooser.setDefaultOption(auto1, auto1);
@@ -107,10 +112,12 @@ public class Robot extends TimedRobot {
     indexer.periodic();
     intake.periodic();
 
-    if (swerve.getXPos() > 4.0) {
+    if ((nearTrenchX - trenchTolerance < swerve.getXPos() && swerve.getXPos() < nearTrenchX + trenchTolerance) || (farTrenchX - trenchTolerance < swerve.getXPos() && swerve.getXPos() < farTrenchX + trenchTolerance)) {
       shooter.lowerHood();
-    } else {
+    } else if (swerve.getXPos() < nearTrenchX - trenchTolerance) {
       shooter.setHoodPosition(calcHoodPosition());
+    } else {
+      shooter.setHoodPosition(shooter.hoodMaxPosition);
     }
 
     swerve.updateOdometry(); // Keeps track of the position of the robot on the field. Must be called each period.
@@ -385,14 +392,57 @@ public class Robot extends TimedRobot {
   }
 
   public void teleopPeriodic() {
-    climber.perioidic(); 
-    indexer.periodic();
-    intake.periodic();
-
     swerve.updateOdometry(); // Keeps track of the position of the robot on the field. Must be called each period.
     swerve.updateVisionHeading(false, 0.0); // Updates the Limelights with the robot heading (for MegaTag2).
     for (int limelightIndex = 0; limelightIndex < swerve.limelights.length; limelightIndex++) { // Iterates through each limelight.
       swerve.addVisionEstimate(limelightIndex, true); // Checks to see ifs there are reliable April Tags in sight of the Limelight and updates the robot position on the field.
+    }
+
+    climber.perioidic(); 
+    indexer.periodic();
+    intake.periodic();
+
+    if ((nearTrenchX - trenchTolerance < swerve.getXPos() && swerve.getXPos() < nearTrenchX + trenchTolerance) || (farTrenchX - trenchTolerance < swerve.getXPos() && swerve.getXPos() < farTrenchX + trenchTolerance)) {
+      shooter.lowerHood();
+    } else if (swerve.getXPos() < nearTrenchX - trenchTolerance) {
+      shooter.setHoodPosition(calcHoodPosition());
+    } else {
+      shooter.setHoodPosition(shooter.hoodMaxPosition);
+    }
+
+    if (driver.getRawButtonPressed(4)) {
+      shooter.spinUp(); 
+      isScoring = swerve.getXPos() < nearTrenchX - trenchTolerance;
+      if (isScoring) {
+        swerve.resetDriveController(getHubHeading());
+      }
+    }
+    if (driver.getRawButtonReleased(4)) {
+      shooter.spinDown();
+      indexer.stop();
+    }
+
+    if (driver.getLeftBumperButtonPressed()) {
+      if (intake.getMode() == Intake.Mode.LEFT) {
+        intake.stow();
+      } else {
+        intake.leftIntake();
+      }
+    } else if (driver.getRightBumperButtonPressed()) {
+      if (intake.getMode() == Intake.Mode.RIGHT) {
+        intake.stow();
+      } else {
+        intake.rightIntake();
+      }
+    }
+
+    if (driver.getRightTriggerAxis() > 0.25) {
+      intake.stow();
+      climber.moveUp();
+    }
+    if (driver.getLeftTriggerAxis() > 0.25) {
+      intake.stow();
+      climber.moveDown(); 
     }
 
     if (driver.getRawButtonPressed(1)) boostMode = true; // A button sets boost mode. (100% speed up from default of 60%).
@@ -416,6 +466,22 @@ public class Robot extends TimedRobot {
 
     if (swerveLock) {
       swerve.xLock(); // Locks the swerve modules (for defense).
+    } else if (driver.getRawButton(4)) {
+      if (isScoring) {
+        swerve.aimDrive(xVel, yVel, getHubHeading(), true);
+        if (shooter.hoodIsInPosition() && shooter.shooterIsAtSpeed() && swerve.atDriveGoal()) {
+          indexer.start();
+        } else {
+          indexer.stop();
+        }
+      } else {
+        swerve.drive(xVel, yVel, angVel, true, 0.0, 0.0);
+        if (shooter.hoodIsInPosition() && shooter.shooterIsAtSpeed()) {
+          indexer.start();
+        } else {
+          indexer.stop();
+        }
+      }
     } else {
       swerve.drive(xVel, yVel, angVel, true, 0.0, 0.0); // Drive at the velocity demanded by the controller.
     }
@@ -429,15 +495,6 @@ public class Robot extends TimedRobot {
     if (driver.getRawButtonReleased(7)) swerve.pushCalibration(false, 0.0); // Updates the position of the robot on the field based on previous calculations.  
 
     if (driver.getRawButtonPressed(8)) swerve.resetGyro(); // Right center button re-zeros the angle reading of the gyro to the current angle of the robot. Should be called if the gyroscope readings are no longer well correlated with the field.
-
-    if (swerve.getXPos() > 4.0) {
-      shooter.lowerHood();
-    } else {
-      shooter.setHoodPosition(calcHoodPosition());
-    }
-
-    if (driver.getPOV() == 0) climber.moveUp(); // D-pad up moves the climber up.
-    if (driver.getPOV() == 180) climber.moveDown(); // D-pad down moves the climber down.
   }
   
   public void disabledInit() { 
