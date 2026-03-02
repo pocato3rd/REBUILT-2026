@@ -6,7 +6,6 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 
 public class Indexer {
@@ -22,7 +21,6 @@ public class Indexer {
   public Indexer() {
     configIndexMotor(hopperIndexMotor, false);
     configIndexMotor(shooterIndexMotor,true);
-    BaseStatusSignal.setUpdateFrequencyForAll(250.0);
 	  ParentDevice.optimizeBusUtilizationForAll(hopperIndexMotor, shooterIndexMotor);
   }
 
@@ -33,7 +31,6 @@ public class Indexer {
 
   // Runs code periodically: refresh the fuel sensor, run the shooting/jam state machine, and set motor outputs for each state
   public void periodic() {
-
     switch (currMode) {
       case FORWARD://just going forward
         hopperIndexMotor.setControl(hopperIndexMotorVoltageRequest.withOutput(12.0).withEnableFOC(true));
@@ -65,11 +62,6 @@ public class Indexer {
   // Publish indexer information (state, sensor, shooting flag, and timer) to SmartDashboard
   public void updateDash() {
     //SmartDashboard.putString("Indexer getMode", getMode().toString());
-    //SmartDashboard.putBoolean("Indexer getShooterSensor", getShooterSensor());
-    //SmartDashboard.putNumber("Indexer getShooterTimer", getShooterTimer());
-    //SmartDashboard.putBoolean("Indexer getHopperSensor", getHopperSensor());
-    //SmartDashboard.putNumber("Indexer getHopperTimer", getHopperTimer());
-    //SmartDashboard.putNumber("Indexer getJammedTimer", getJamTimer());
   }
   
   // Configs the motor settings and PID

@@ -41,8 +41,9 @@ public class Robot extends TimedRobot {
   private final double nearTrenchX = 182.11*0.0254;
   private final double farTrenchX = Drivetrain.fieldLength - nearTrenchX;
   private final double trenchTolerance = 0.5;
+  private boolean isNearTrench = false;
   private boolean isScoring = false;
-  
+  private boolean isShooting = false;
   private final Timer shootingTimer = new Timer();
 
   public void robotInit() { 
@@ -402,6 +403,7 @@ public class Robot extends TimedRobot {
     climber.init(); 
     indexer.init();
     intake.init();
+    isShooting = false;
   }
 
   public void teleopPeriodic() {
@@ -415,6 +417,8 @@ public class Robot extends TimedRobot {
     indexer.periodic();
     intake.periodic();
 
+    isNearTrench = (nearTrenchX - trenchTolerance < swerve.getXPos() && swerve.getXPos() < nearTrenchX + trenchTolerance) || (farTrenchX - trenchTolerance < swerve.getXPos() && swerve.getXPos() < farTrenchX + trenchTolerance);
+
     if (swerve.getXPos() > 2.0) {
       climber.stow();
     } else if (driver.getRightTriggerAxis() > 0.25) {
@@ -425,13 +429,10 @@ public class Robot extends TimedRobot {
       climber.moveDown(); 
     } 
 
-    if ((nearTrenchX - trenchTolerance < swerve.getXPos() && swerve.getXPos() < nearTrenchX + trenchTolerance) || (farTrenchX - trenchTolerance < swerve.getXPos() && swerve.getXPos() < farTrenchX + trenchTolerance)) {
-      shooter.lowerHood();
-    } 
-
-    if (driver.getRawButtonPressed(1)) {
-      shooter.spinUp(); 
+    if (!isNearTrench && driver.getRawButtonPressed(1)) {
+      isShooting = true;
       isScoring = swerve.getXPos() < nearTrenchX - trenchTolerance;
+      shooter.spinUp(); 
       if (isScoring) {
         swerve.resetDriveController(getHubHeading());
         shooter.setHoodPosition(calcHoodPosition());
@@ -440,11 +441,12 @@ public class Robot extends TimedRobot {
       }
     }
 
-    if (driver.getRawButtonReleased(1)) {
+    if (isNearTrench || driver.getRawButtonReleased(1)) {
+      isShooting = false;
       shooter.spinDown();
       shooter.lowerHood();
       indexer.stop();
-    }
+    } 
 
     if (driver.getLeftBumperButtonPressed()) {
       if (intake.getMode() == Intake.Mode.LEFT) {
@@ -482,7 +484,7 @@ public class Robot extends TimedRobot {
 
     if (swerveLock) {
       swerve.xLock(); // Locks the swerve modules (for defense).
-    } else if (driver.getRawButton(1)) {
+    } else if (isShooting) {
       if (isScoring) {
         swerve.aimDrive(xVel, yVel, getHubHeading(), true);
         shooter.setHoodPosition(calcHoodPosition());
@@ -641,6 +643,7 @@ public class Robot extends TimedRobot {
     climber.perioidic();
     climber.moveUp();
     climber.moveDown();
+    climber.stow();
     System.out.println("climber getMode: " + climber.getMode().toString());
     System.out.println("climber atDesiredPosition: " + climber.atDesiredPosition());
     System.out.println("climber getPosition: " + climber.getPosition());

@@ -49,8 +49,6 @@ public class Intake {
 
   private final Timer leftHomingTimer = new Timer();
   private final Timer rightHomingTimer = new Timer();
-  private final Timer leftIntakeTimer = new Timer();
-  private final Timer rightIntakeTimer = new Timer();
   private final double armPosTol = 0.5;
   private final double armIntakePosition = 9.9; // Can adjust
   private final double armStowPosition = 0.2; // Can adjust
@@ -60,6 +58,8 @@ public class Intake {
   private boolean rightArmIsHomed = false;
   private double desiredLeftArmPosition = 0.0;
   private double desiredRightArmPosition = 0.0;
+  private boolean leftArmIsStowed = true;
+  private boolean rightArmIsStowed = true;
 
   public Intake() {
     configArmMotor(leftArmMotor, true);
@@ -74,8 +74,6 @@ public class Intake {
     rightArmVelocity = rightArmMotor.getVelocity();
     BaseStatusSignal.setUpdateFrequencyForAll(250.0, leftArmPosition, leftArmVelocity, rightArmPosition, rightArmVelocity);
 		ParentDevice.optimizeBusUtilizationForAll(rightArmMotor, rightRollerMotor, rightCenteringMotor, leftArmMotor, leftRollerMotor, leftCenteringMotor);
-    leftIntakeTimer.restart();
-    rightIntakeTimer.restart();
   }
 
   public void init() {
@@ -84,19 +82,8 @@ public class Intake {
   }
 
   public void periodic() {
-      if (currMode == Mode.LEFT) {
-        leftIntakeTimer.restart();
-      }
-      if (currMode == Mode.RIGHT) {
-        rightIntakeTimer.restart();
-      }
     switch (currMode) {
       case HOME:
-        leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-        rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-        leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-        rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-
         leftArmMotor.setControl(leftArmMotorVoltageRequest.withOutput(-1.0).withEnableFOC(true));
         rightArmMotor.setControl(rightArmMotorVoltageRequest.withOutput(-1.0).withEnableFOC(true));
 
@@ -106,10 +93,12 @@ public class Intake {
         if (leftHomingTimer.get() > 1.0 && !leftArmIsHomed) {
           leftArmMotor.setPosition(0.0, 0.03);
           leftArmIsHomed = true;
+          leftArmIsStowed = true;
         }
         if (rightHomingTimer.get() > 1.0 && !rightArmIsHomed) {
           rightArmMotor.setPosition(0.0, 0.03);
           rightArmIsHomed = true;
+          rightArmIsStowed = true;
         }
 
         if (leftArmIsHomed && rightArmIsHomed) {
@@ -120,23 +109,14 @@ public class Intake {
       break;
 
       case LEFT:
-        if (leftIntakeTimer.get() < 0.75) {
-          leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(8.0).withEnableFOC(true));
-          leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(4.0).withEnableFOC(true));
-        } else {
-          leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-          leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
+        if (leftArmInPosition()) {
+          leftArmIsStowed = false;
         }
-        if (rightIntakeTimer.get() < 0.75) {
-          rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(8.0).withEnableFOC(true));
-          rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(4.0).withEnableFOC(true));
-        } else {
-          rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-          rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-        }
-
-        rightArmMotor.setControl(rightArmMotorPositionRequest.withPosition(armStowPosition));
         if (rightArmInPosition()) {
+          rightArmIsStowed = true;
+        }
+        rightArmMotor.setControl(rightArmMotorPositionRequest.withPosition(armStowPosition));
+        if (rightArmIsStowed) {
           leftArmMotor.setControl(leftArmMotorPositionRequest.withPosition(armIntakePosition));
         } else {
           leftArmMotor.setControl(leftArmMotorPositionRequest.withPosition(armStowPosition));
@@ -144,23 +124,14 @@ public class Intake {
       break;
 
       case RIGHT:
-        if (leftIntakeTimer.get() < 0.75) {
-          leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(8.0).withEnableFOC(true));
-          leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(4.0).withEnableFOC(true));
-        } else {
-          leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-          leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-        }
-        if (rightIntakeTimer.get() < 0.75) {
-          rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(8.0).withEnableFOC(true));
-          rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(4.0).withEnableFOC(true));
-        } else {
-          rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-          rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-        }
-
-        leftArmMotor.setControl(leftArmMotorPositionRequest.withPosition(armStowPosition));
         if (leftArmInPosition()) {
+          leftArmIsStowed = true;
+        }
+        if (rightArmInPosition()) {
+          rightArmIsStowed = false;
+        }
+        leftArmMotor.setControl(leftArmMotorPositionRequest.withPosition(armStowPosition));
+        if (leftArmIsStowed) {
           rightArmMotor.setControl(rightArmMotorPositionRequest.withPosition(armIntakePosition));
         } else {
           rightArmMotor.setControl(rightArmMotorPositionRequest.withPosition(armStowPosition));
@@ -168,24 +139,29 @@ public class Intake {
       break;
 
       case STOW:
-        if (leftIntakeTimer.get() < 0.75) {
-          leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(8.0).withEnableFOC(true));
-          leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(4.0).withEnableFOC(true));
-        } else {
-          leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-          leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
+        if (leftArmInPosition()) {
+          leftArmIsStowed = true;
         }
-        if (rightIntakeTimer.get() < 0.75) {
-          rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(8.0).withEnableFOC(true));
-          rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(4.0).withEnableFOC(true));
-        } else {
-          rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
-          rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
+        if (rightArmInPosition()) {
+          rightArmIsStowed = true;
         }
-
         leftArmMotor.setControl(leftArmMotorPositionRequest.withPosition(armStowPosition));
         rightArmMotor.setControl(rightArmMotorPositionRequest.withPosition(armStowPosition));
       break;
+    }
+    if (leftArmIsStowed) {
+      leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
+      leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
+    } else {
+      leftRollerMotor.setControl(leftRollerMotorVoltageRequest.withOutput(8.0).withEnableFOC(true));
+      leftCenteringMotor.setControl(leftCenteringMotorVoltageRequest.withOutput(4.0).withEnableFOC(true));
+    }
+    if (rightArmIsStowed) {
+      rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
+      rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(0.0).withEnableFOC(true));
+    } else {
+      rightRollerMotor.setControl(rightRollerMotorVoltageRequest.withOutput(8.0).withEnableFOC(true));
+      rightCenteringMotor.setControl(rightCenteringMotorVoltageRequest.withOutput(4.0).withEnableFOC(true));
     }
   }
 
@@ -194,6 +170,8 @@ public class Intake {
       currMode = Mode.LEFT;
       desiredLeftArmPosition = armIntakePosition;
       desiredRightArmPosition = armStowPosition;
+      leftArmIsStowed = !leftArmInPosition();
+      rightArmIsStowed = rightArmInPosition();
     }
   }
 
@@ -202,6 +180,8 @@ public class Intake {
       currMode = Mode.RIGHT;
       desiredLeftArmPosition = armStowPosition;
       desiredRightArmPosition = armIntakePosition;
+      leftArmIsStowed = leftArmInPosition();
+      rightArmIsStowed = !rightArmInPosition();
     }
   }
 
@@ -210,6 +190,8 @@ public class Intake {
       currMode = Mode.STOW;
       desiredLeftArmPosition = armStowPosition;
       desiredRightArmPosition = armStowPosition;
+      leftArmIsStowed = leftArmInPosition();
+      rightArmIsStowed = rightArmInPosition();
     }
   }
 
@@ -308,11 +290,12 @@ public class Intake {
 		motorConfigs.MotorOutput.Inverted = invert ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
 
 		// MotionMagicTorqueFOC closed-loop control configuration.
-		motorConfigs.Slot0.kP = 37.0; // Units: amperes per 1 rotation of error.
+    motorConfigs.Slot0.kP = 800.0/18.75; // Units: amperes per 1 rotation of error.
 		motorConfigs.Slot0.kI = 0.0; // Units: amperes per 1 rotation * 1 second of error.
-		motorConfigs.Slot0.kD = 0.84; // Units: amperes per 1 rotation / 1 second of error.
-		motorConfigs.MotionMagic.MotionMagicAcceleration = 250.0; //Units: rotations per second per second.
-		motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 25.0; // Units: rotations per second.
+		motorConfigs.Slot0.kD = 18.0/18.75; // Units: amperes per 1 rotation / 1 second of error.
+		motorConfigs.MotionMagic.MotionMagicAcceleration = 2.0*5800.0/60.0; // Units: rotations per second per second.
+		motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 5800.0/60.0; // Units: rotations per second.
+
 
 		motor.getConfigurator().apply(motorConfigs, 0.03);
   }

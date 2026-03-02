@@ -16,7 +16,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Shooter {
   private final CANBus canivore = new CANBus("canivore");
@@ -31,15 +30,15 @@ public class Shooter {
   private final VelocityVoltage shooterMotorLeftVelocityRequest = new VelocityVoltage(0.0).withEnableFOC(true);
   private final MotionMagicTorqueCurrentFOC hoodMotorPositionRequest = new MotionMagicTorqueCurrentFOC(0.0); 
   private final double rpmTol = 200.0; // Can adjust
-  private final double hoodTol = 0.2; // Can adjust
+  private final double hoodTol = 0.005; // Can adjust
   public final double hoodMinPosition = 0.020; // Can adjust
-  public final double hoodMaxPosition = 0.115225; // Can adjust
+  public final double hoodMaxPosition = 0.115; // Can adjust
   private double shootingRPM = 2800.0; // Can adjust
   private double desiredHoodPosition = hoodMinPosition;
 
   // Initialize Shooter: configure motor, and obtain a data for velocity
   public Shooter() {
-    configEncoder(hoodEncoder);
+    configHoodEncoder(hoodEncoder);
     configShootMotor(shootMotorRight, true);
     configShootMotor(shootMotorLeft, false); // Configures the motor with counterclockwise rotation positive.
     configHoodMotor(hoodMotor, false);
@@ -119,17 +118,17 @@ public class Shooter {
 
   // Publish Shooter information (Motor state, Velocity) to SmartDashboard.
   public void updateDash() {
-    SmartDashboard.putNumber("Shooter getRightShooterRPM", getRightShooterRPM());
-    SmartDashboard.putNumber("Shooter getLeftShooterRPM", getLeftShooterRPM());
+    //SmartDashboard.putNumber("Shooter getRightShooterRPM", getRightShooterRPM());
+    //SmartDashboard.putNumber("Shooter getLeftShooterRPM", getLeftShooterRPM());
     //SmartDashboard.putBoolean("Shooter shooterIsAtSpeed", shooterIsAtSpeed());
-    SmartDashboard.putNumber("Shooter shootingRPM", shootingRPM);
+    //SmartDashboard.putNumber("Shooter shootingRPM", shootingRPM);
     //SmartDashboard.putNumber("Shooter getHoodPosition", getHoodPosition());
     //SmartDashboard.putBoolean("Shooter hoodIsInPosition", hoodIsInPosition());
     //SmartDashboard.putNumber("Shooter desiredHoodPosition", desiredHoodPosition);
     //SmartDashboard.putBoolean("Shooter isReady", isReady());
   }
 
-  private void configEncoder(CANcoder CANsensor) {
+  private void configHoodEncoder(CANcoder CANsensor) {
     CANcoderConfiguration sensorConfigs = new CANcoderConfiguration();
 
     sensorConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5; 
@@ -166,12 +165,12 @@ public class Shooter {
     motorConfigs.Feedback.FeedbackRemoteSensorID = hoodEncoder.getDeviceID();
     motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
     motorConfigs.Feedback.SensorToMechanismRatio = 1.0;
-    motorConfigs.Feedback.RotorToSensorRatio = 211.68; //
+    motorConfigs.Feedback.RotorToSensorRatio = 211.68;
 
     // MotionMagicTorqueFOC closed-loop control configuration.
-    motorConfigs.Slot0.kP = 9600.0; // Units: amperes per 1 swerve wheel rotation of error.
+    motorConfigs.Slot0.kP = 800.0*211.68/18.75; // Units: amperes per 1 swerve wheel rotation of error.
     motorConfigs.Slot0.kI = 0.0; // Units: amperes per 1 swerve wheel rotation * 1 second of error.
-    motorConfigs.Slot0.kD = 216.0; // Units: amperes per 1 swerve wheel rotation / 1 second of error.
+    motorConfigs.Slot0.kD = 18.0*211.68/18.75; // Units: amperes per 1 swerve wheel rotation / 1 second of error.
     motorConfigs.MotionMagic.MotionMagicAcceleration = 10.0*5800.0/(60.0*211.68); // Units: rotations per second per second.
     motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 5800.0/(60.0*211.68); // Units: roations per second.
 
