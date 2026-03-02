@@ -22,16 +22,17 @@ public class Climber {
 	private final MotionMagicTorqueCurrentFOC climbMotorPositionRequest = new MotionMagicTorqueCurrentFOC(0.0);
   private final VoltageOut climbMotorVoltageRequest = new VoltageOut(0.0).withEnableFOC(true);
   private final Timer homingTimer = new Timer();
-	private final double upPosition = 80.0;
-	private final double downPosition = 2.0;
+	private final double upPosition = 90.0;
+	private final double downPosition = 25.0;
+  private final double stowPosition = 2.0;
 	private final double posTol = 1.0;
-  public enum Mode {HOME, UP, DOWN}
+  public enum Mode {HOME, UP, DOWN, STOW}
 	public Mode currMode = Mode.HOME;
 	private boolean isHomed = false;
 	private double desiredPosition = 0.0;
 
 	public Climber() {
-		configMotor(climbMotor, false); // Configures the motor with counterclockwise rotation positive.
+		configClimbMotor(climbMotor, false); // Configures the motor with counterclockwise rotation positive.
 		climberPosition = climbMotor.getPosition();
 		climberVelocity = climbMotor.getVelocity();
 		BaseStatusSignal.setUpdateFrequencyForAll(250.0, climberPosition, climberVelocity);
@@ -49,9 +50,9 @@ public class Climber {
 				if (Math.abs(getVelocity()) > 0.5) homingTimer.restart();
 				if (homingTimer.get() > 1.0) {
 					climbMotor.setPosition(0.0, 0.03);
-          			isHomed = true;
-					currMode = Mode.DOWN;
-          			desiredPosition = downPosition;
+          isHomed = true;
+					currMode = Mode.STOW;
+          desiredPosition = stowPosition;
 				}
 			break;
 
@@ -62,20 +63,30 @@ public class Climber {
 			case DOWN:
 				climbMotor.setControl(climbMotorPositionRequest.withPosition(downPosition)); // Sets the position of the motor in shaft rotations.
 			break;
+
+      case STOW:
+        climbMotor.setControl(climbMotorPositionRequest.withPosition(stowPosition)); // Sets the position of the motor in shaft rotations.
 		}
 	}
 
 	public void moveUp() {
 		if (isHomed) {
 			currMode = Mode.UP;
-      		desiredPosition = upPosition;
+      desiredPosition = upPosition;
 		}
 	}
 
 	public void moveDown() {
 		if (isHomed) {
 			currMode = Mode.DOWN;
-      		desiredPosition = downPosition;
+      desiredPosition = downPosition;
+		}
+	}
+
+  public void stow() {
+		if (isHomed) {
+			currMode = Mode.STOW;
+      desiredPosition = stowPosition;
 		}
 	}
 
@@ -104,18 +115,18 @@ public class Climber {
 		//SmartDashboard.putNumber("Climber Velocity", getVelocity());
 	}
 	
-	private void configMotor(TalonFX motor, boolean invert) {
+	private void configClimbMotor(TalonFX motor, boolean invert) {
 		TalonFXConfiguration motorConfigs = new TalonFXConfiguration();
 
 		motorConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 		motorConfigs.MotorOutput.Inverted = invert ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
 
 		// MotionMagicTorqueFOC closed-loop control configuration.
-		motorConfigs.Slot0.kP = 37.0; // Units: amperes per 1 rotation of error.
+		motorConfigs.Slot0.kP = 800.0/18.75; // Units: amperes per 1 rotation of error.
 		motorConfigs.Slot0.kI = 0.0; // Units: amperes per 1 rotation * 1 second of error.
-		motorConfigs.Slot0.kD = 0.84; // Units: amperes per 1 rotation / 1 second of error.
-		motorConfigs.MotionMagic.MotionMagicAcceleration = 1000.0; // Units: rotations per second per second.
-		motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 100.0; // Units: rotations per second.
+		motorConfigs.Slot0.kD = 18.0/18.75; // Units: amperes per 1 rotation / 1 second of error.
+		motorConfigs.MotionMagic.MotionMagicAcceleration = 10.0*5800.0/60.0; // Units: rotations per second per second.
+		motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 5800.0/60.0; // Units: rotations per second.
 
 		motor.getConfigurator().apply(motorConfigs, 0.03);
 	}
