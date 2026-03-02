@@ -27,12 +27,13 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.LimelightHelpers.PoseEstimate;
 
 class Drivetrain {
   public static final double maxAcc = 1.0*9.80665/Math.sqrt(2.0); // The maximum acceleration of the robot, typically limited by the coefficient of friction between the swerve wheels and the field.
-  public static final double wheelbaseX = (24.0-2*2.625)*0.0254; // The length of the robot from front to back in units of meters. Measured from the centers of each swerve wheel.
+  public static final double wheelbaseX = (31.0-2*2.625)*0.0254; // The length of the robot from front to back in units of meters. Measured from the centers of each swerve wheel.
   public static final double wheelbaseY = (24.0-2*2.625)*0.0254; // The length of the robot from left to right in units of meters. Measured from the centers of each swerve wheel.
   public static final double wheelbaseR = Math.sqrt(Math.pow(wheelbaseX/2.0, 2) + Math.pow(wheelbaseY/2.0, 2)); // The "radius" of the robot from robot center to the center of the swerve wheel in units of meters.
   public static final double fieldWidth = 8.0137; // The X width of the field in meters. Used to translate between Blue and Red coordinate systems.
@@ -54,16 +55,16 @@ class Drivetrain {
   private static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(frontLeftModulePos, frontRightModulePos, backRightModulePos, backLeftModulePos);
 
   // Initializes each swerve module.
-  private final SwerveModule frontLeftModule = new SwerveModule(1, 2, 1, false, -0.161865, "canivore"); 
-  private final SwerveModule frontRightModule = new SwerveModule(3, 4, 2, true, 0.103760 , "canivore");
-  private final SwerveModule backRightModule = new SwerveModule(5, 6, 3, true, 0.159912 , "canivore");
-  private final SwerveModule backLeftModule = new SwerveModule(7, 8, 4, false, 0.229248, "canivore");
+  private final SwerveModule frontLeftModule = new SwerveModule(3, 4, 25, false, -0.433350, "canivore"); 
+  private final SwerveModule frontRightModule = new SwerveModule(1, 2, 24, true, 0.069092 , "canivore");
+  private final SwerveModule backRightModule = new SwerveModule(5, 6, 27, true, -0.327148 , "canivore");
+  private final SwerveModule backLeftModule = new SwerveModule(7, 8, 26, false, -0.164795, "canivore");
   private final SwerveModule[] modules = {frontLeftModule, frontRightModule, backRightModule, backLeftModule};
   private SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(0.0, 0.0, 0.0, new Rotation2d()));
   private SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
 
   private final CANBus canivore = new CANBus("canivore"); // Refers to the CAN bus associated with the CANivore.
-  private final Pigeon2 pigeon = new Pigeon2(0, canivore); // Pigeon 2.0 CAN Gyroscope
+  private final Pigeon2 pigeon = new Pigeon2(21, canivore); // Pigeon 2.0 CAN Gyroscope
   private final StatusSignal<Angle> pigeonYaw; // Stores the yaw angle measured by the pigeon. 
   private final StatusSignal<Angle> pigeonPitch; // Stores the pitch angle measured by the pigeon.
   private final StatusSignal<Angle> pigeonRoll; // Stores the roll angle measured by the pigeon.
@@ -72,7 +73,7 @@ class Drivetrain {
   private final StatusSignal<AngularVelocity> pigeonRollRate; // Stores the roll velocity measured by the pigeon.
 
   // Limelight Variables
-  public final String[] limelights = {"limelight-shooter", "limelight-backleft", "limelight-backright"}; // Stores the names of all limelights on the robot.
+  public final String[] limelights = {"limelight-shooter", "limelight-bl", "limelight-br"}; // Stores the names of all limelights on the robot.
   private final int maxCalibrationFrames = 50; // The number of LL frames that will be averaged to determine the position of the robot when it is disabled() or being calibrated.
   private final int minCalibrationFrames = 3; // The minimum amount of LL frames that must be processed to accept a calibration.
   private double[][] calibrationArray = new double[3][maxCalibrationFrames]; // An array that stores the LL botpose for the most recent frames, up to the number of frames specified by maxCalibrationFrames
@@ -538,9 +539,9 @@ class Drivetrain {
     //SmartDashboard.putNumber("Front Right Swerve Module Wheel Encoder Angle", frontRightModule.getWheelAngle());
     //SmartDashboard.putNumber("Back Right Swerve Module Wheel Encoder Angle", backRightModule.getWheelAngle());
     //SmartDashboard.putNumber("Back Left Swerve Module Wheel Encoder Angle", backLeftModule.getWheelAngle());
-    //SmartDashboard.putNumber("Robot X Position", getXPos());
-    //SmartDashboard.putNumber("Robot Y Position", getYPos());
-    //SmartDashboard.putNumber("Robot Angular Position (Fused)", getFusedAng());
+    SmartDashboard.putNumber("Robot X Position", getXPos());
+    SmartDashboard.putNumber("Robot Y Position", getYPos());
+    SmartDashboard.putNumber("Robot Angular Position (Fused)", getFusedAng());
     //SmartDashboard.putNumber("Robot Angular Position (Gyro)", getGyroAng());
     //SmartDashboard.putNumber("Robot Pitch", getGyroPitch());
     //SmartDashboard.putNumber("Robot Roll", getGyroRoll());

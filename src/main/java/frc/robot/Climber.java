@@ -23,9 +23,10 @@ public class Climber {
   private final VoltageOut climbMotorVoltageRequest = new VoltageOut(0.0).withEnableFOC(true);
   private final Timer homingTimer = new Timer();
 	private final double upPosition = 80.0;
-	private final double downPosition = 2.0;
+	private final double downPosition = 20.0;
+  private final double stowPosition = 2.0;
 	private final double posTol = 1.0;
-  public enum Mode {HOME, UP, DOWN}
+  public enum Mode {HOME, UP, DOWN, STOW}
 	public Mode currMode = Mode.HOME;
 	private boolean isHomed = false;
 	private double desiredPosition = 0.0;
@@ -50,8 +51,8 @@ public class Climber {
 				if (homingTimer.get() > 1.0) {
 					climbMotor.setPosition(0.0, 0.03);
           isHomed = true;
-					currMode = Mode.DOWN;
-          desiredPosition = downPosition;
+					currMode = Mode.STOW;
+          desiredPosition = stowPosition;
 				}
 			break;
 
@@ -62,6 +63,9 @@ public class Climber {
 			case DOWN:
 				climbMotor.setControl(climbMotorPositionRequest.withPosition(downPosition)); // Sets the position of the motor in shaft rotations.
 			break;
+
+      case STOW:
+        climbMotor.setControl(climbMotorPositionRequest.withPosition(stowPosition)); // Sets the position of the motor in shaft rotations.
 		}
 	}
 
@@ -76,6 +80,13 @@ public class Climber {
 		if (isHomed) {
 			currMode = Mode.DOWN;
       desiredPosition = downPosition;
+		}
+	}
+
+  public void stow() {
+		if (isHomed) {
+			currMode = Mode.STOW;
+      desiredPosition = stowPosition;
 		}
 	}
 
