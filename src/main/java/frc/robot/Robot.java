@@ -640,7 +640,7 @@ public class Robot extends TimedRobot {
   public void runAll() { 
     if (Robot.isSimulation()) {
       // Set the robot's initial pose at the beginning of the sim
-      swerve.setPoseSim(new Pose2d(startingXPosSim, startingYPosSim, Rotation2d.fromDegrees(180.0)));
+      swerve.setPoseSim(new Pose2d(startingXPosSim, startingYPosSim, Rotation2d.fromDegrees(0.0)));
     }
 
     swerve.resetDriveController(0.0);

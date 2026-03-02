@@ -115,7 +115,9 @@ public class Shooter {
 
   // Returns true or false based on whether the shooter motor is near the desired RPM.
   public boolean shooterIsAtSpeed() {
-    return Math.abs(shootingRPM - getLeftShooterRPM()) < rpmTol && Math.abs(shootingRPM - getRightShooterRPM()) < rpmTol;
+    // use abs() on the left/right shooter to compare magnitudes 
+    // otherwise you may have (2800 - -2800) = 5600 rpm which shows as not ready
+    return Math.abs(shootingRPM - Math.abs(getLeftShooterRPM())) < rpmTol && Math.abs(shootingRPM - Math.abs(getRightShooterRPM())) < rpmTol;
   }
 
   // Returns the motor velocity in RPM (Rotations Per Minute)
@@ -134,14 +136,14 @@ public class Shooter {
 
   // Publish Shooter information (Motor state, Velocity) to SmartDashboard.
   public void updateDash() {
-    //SmartDashboard.putNumber("Shooter getRightShooterRPM", getRightShooterRPM());
-    //SmartDashboard.putNumber("Shooter getLeftShooterRPM", getLeftShooterRPM());
-    //SmartDashboard.putBoolean("Shooter shooterIsAtSpeed", shooterIsAtSpeed());
-    //SmartDashboard.putNumber("Shooter shootingRPM", shootingRPM);
-    //SmartDashboard.putNumber("Shooter getHoodPosition", getHoodPosition());
-    //SmartDashboard.putBoolean("Shooter hoodIsInPosition", hoodIsInPosition());
-    //SmartDashboard.putNumber("Shooter desiredHoodPosition", desiredHoodPosition);
-    //SmartDashboard.putBoolean("Shooter isReady", isReady());
+    // SmartDashboard.putNumber("Shooter getRightShooterRPM", getRightShooterRPM());
+    // SmartDashboard.putNumber("Shooter getLeftShooterRPM", getLeftShooterRPM());
+    // SmartDashboard.putBoolean("Shooter shooterIsAtSpeed", shooterIsAtSpeed());
+    // SmartDashboard.putNumber("Shooter shootingRPM", shootingRPM);
+    // SmartDashboard.putNumber("Shooter getHoodPosition", getHoodPosition());
+    // SmartDashboard.putBoolean("Shooter hoodIsInPosition", hoodIsInPosition());
+    // SmartDashboard.putNumber("Shooter desiredHoodPosition", desiredHoodPosition);
+    // SmartDashboard.putBoolean("Shooter isReady", isReady());
   }
 
   public void simulationPeriodic() {

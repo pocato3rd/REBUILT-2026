@@ -147,7 +147,7 @@ class Drivetrain {
     anglePathController.setIntegratorRange(-maxAngVelAuto*0.8, maxAngVelAuto*0.8);
 
     if (Robot.isSimulation()) {
-      robotField.setRobotPose(0, 0, new Rotation2d(Math.toRadians(-90)));
+      robotField.setRobotPose(0, 0, new Rotation2d(Math.toRadians(90)));
     }
 
     SmartDashboard.putData("Field", robotField);
@@ -460,7 +460,10 @@ class Drivetrain {
 
   public void setPoseSim(Pose2d newPose) {
     // Used in simulation to reset the "known" pose of the robot. 
-    odometry.resetPosition(Rotation2d.fromDegrees(getGyroAng()), getModulePositions(), newPose); 
+    pigeon.setYaw(newPose.getRotation().getDegrees());
+    pigeonYaw.refresh();
+    odometry.resetPosition(Rotation2d.fromDegrees(getGyroAng()), getModulePositions(), newPose);
+    
   }
 
   public void initPathPose(int pathIndex) {
@@ -605,9 +608,9 @@ class Drivetrain {
     //SmartDashboard.putBoolean("isRedAllaince", isRedAlliance());
     //SmartDashboard.putBoolean("isBlueAllaince", isBlueAlliance());   
     if (Robot.isSimulation()) {
-      // Update the current pose of the robot in the visualized field
+      // Update the current pose of the robot in the visualized field with placeholder to offset rotation if needed
       Pose2d curPose = odometry.getEstimatedPosition();
-      curPose = curPose.rotateAround(curPose.getTranslation(), new Rotation2d(-Math.PI/2));
+      curPose = curPose.rotateAround(curPose.getTranslation(), new Rotation2d(0));
       robotField.setRobotPose(curPose);
     }
   }
@@ -634,9 +637,6 @@ class Drivetrain {
 
   public void simulationPeriodic() {
     // Update gyro (pigeon) simulation via pigeonSim
-    // access via pigeonSi
-    // pigeonSim.setPitch(0);
-    // pigeonSim.setRoll(0);
     pigeonSim.addYaw(getAngVel() * Robot.dTime);
     pigeonSim.setRoll(0);
     pigeonSim.setPitch(0);
